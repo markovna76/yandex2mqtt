@@ -3,7 +3,7 @@
 const {logger} = global;
 const loki = require('lokijs');
 
-global.dbl = new loki('./loki.json', {
+global.dbl = new loki('data/loki.json', {
     autoload: true,
     autosave: true,
     autosaveInterval: 5000,
@@ -23,7 +23,7 @@ module.exports.find = (key, done) => {
     } else {
         logger.log('error', new Error('Token Not Found'));
         return done();
-    }  
+    }
 };
 
 module.exports.findByUserIdAndClientId = (userId, clientId, done) => {
@@ -40,7 +40,7 @@ module.exports.findByUserIdAndClientId = (userId, clientId, done) => {
     } else {
         logger.log('error', new Error('User Not Found'));
         return done();
-    }  
+    }
 };
 
 module.exports.save = (token, userId, clientId, done) => {

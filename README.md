@@ -1,5 +1,5 @@
 # yandex2mqtt
-Мост из Яндекс УД в MQTT на Node.js 
+Мост из Яндекс УД в MQTT на Node.js
 
 Форк [Проекта](https://github.com/munrexio/yandex2mqtt) и [Статья на Хабре](https://habr.com/ru/post/465537/) к оригиналу.
 
@@ -29,46 +29,64 @@
 - **"Белый" IP адрес и домен**. Если нет своего домена и белого IP адреса можно воспользоваться Dynamic DNS  сервисами (например, noip.com).
 - **SSL сертификат _(самоподписанный сертификат не подойдёт)_**. Для получения сертификата можно воспользоваться [https://letsencrypt.org](https://letsencrypt.org).
 
+## Docker
+
+Мои сборки проекта: https://hub.docker.com/r/petrows/yandex2mqtt/tags
+
+В корне проекта имеется DockerFile, для сборки выполнить
+```bash
+docker build -t yandex2mqtt -f yandex2mqtt.dockerfile .
+```
+Запуск контейнера (данные приложения будут сохранены в папке `/tmp/y2m-data`):
+```bash
+# Создание папок данных
+mkdir -p /tmp/y2m-data
+# Копируем файл конфигурации. ВАЖНО: требует настройки, иначе контейнер не запустится
+cp config.orig.js /tmp/y2m-data/config.js
+# Запуск контейнера
+docker run -v /tmp/y2m-data:/opt/yandex2mqtt/data -v /tmp/y2m-data/config.js:/opt/yandex2mqtt/config.js yandex2mqtt
+```
+
 ## Установка
 Настройка репозитория Node JS
-```
+```bash
 curl -sL https://deb.nodesource.com/setup_10.x | bash -
 ```
 
 Устанавка необходимых пакетов
-```
+```bash
 apt-get install -y nodejs git make g++ gcc build-essential
 ```
 
 Копирование файлов y2m с git
-```
+```bash
 git clone https://github.com/lasthead0/yandex2mqtt.git /opt/yandex2mqtt
 ```
 
 Установка прав на директорию
-```
+```bash
 chown -R root:root /opt/yandex2mqtt
 ```
 
 Установка необходимых модулей nodejs
-```
+```bash
 cd /opt/yandex2mqtt
 npm install
 ```
 
 Запуск моста (выполняется после настройки)
-```
+```bash
 npm start
 ```
 
 ## Настройка yandex2mqtt
 Все основные настройки моста прописываются в файл `config.js`. Перед запуском обязательно отредактируйте его.
-```
+```bash
 mv config.orig.js config.js
 ```
 
 #### Файл конфигурации
-```
+```js
 module.exports = {
   notification: [
     {
@@ -109,7 +127,7 @@ module.exports = {
 
 ###### Блок настройки mqtt клиента
 Указать данные Вашего MQTT сервера
-```
+```js
 mqtt: {
     host: 'localhost',
     port: 1883,
@@ -120,7 +138,7 @@ mqtt: {
 
 ###### Блок настройки https сервера
 Указать порт, на котором будет работать мост, а так же пути к сертификату ssl.
-```
+```js
 https: {
   privateKey: '/etc/letsencrypt/live/your.domain.ru/privkey.pem',
   certificate: '/etc/letsencrypt/live/your.domain.ru/fullchain.pem',
@@ -130,7 +148,7 @@ https: {
 
 ###### Блок настройки клиентов
 Здесь используются произвольные данные, далее они понадобятся для подключения к УД Yandex.
-```
+```js
 clients: [
     {
         id: '1',
@@ -143,7 +161,7 @@ clients: [
 ```
 
 ###### Блок настройки пользователей
-```
+```js
 users: [
     {
         id: '1',
@@ -161,7 +179,7 @@ users: [
 ```
 
 ###### Блок настройки устройств
-```
+```js
 devices: [
     {
         id: 'haw-002-switch',
@@ -328,7 +346,7 @@ devices: [
 
 В настройках предусмотрен блок `notification`.
 
-```
+```js
 notification: [
     {
         skill_id: '6fca0a54-a505-4420-b774-f01da95e5c31',
@@ -354,7 +372,7 @@ notification: [
 Блок valueMapping позволяет настроить конвертацию значений между yandex api и MQTT. Это может быть актуально для умений типа `devices.capabilities.on_off` и `devices.capabilities.toggle`.
 
 *Например, если в УД состояние влючено/выключено соответствует значениям 1/0, то Вам понадобиться их конвертировать, т.к. в навыках Yandex значения true/false.*
-```
+```js
 valueMapping: [
     {
         type: 'on_off',
@@ -375,7 +393,7 @@ valueMapping: [
 
 ## Создание службы
 В папке `/etc/systemd/system/` создать файл `yandex2mqtt.service` со следующим содержанем:
-```
+```conf
 [Unit]
 Description=yandex2mqtt
 After=network.target
@@ -393,18 +411,18 @@ WantedBy=multi-user.target
 ```
 
 Для включения службы использовать команду:
-```
+```bash
 systemctl enable yandex2mqtt.service
 ```
 
 Для управления службой использовать команды:
-```
+```bash
 service yandex2mqtt start
 ```
-```
+```bash
 service yandex2mqtt stop
 ```
-```
+```bash
 service yandex2mqtt restart
 ```
 
@@ -445,7 +463,7 @@ service yandex2mqtt restart
 
 Аналогичная ситуация может возникнуть, если в качестве топика использовать объект iob созданный вручную. В данном случает адаптер mqtt не будет "знать", что данный объект является топиком mqtt.
 Для исправления этой ошибки необходимо отредактировать объект iob: зайти в редактирование объекта и на вкладке **RAW (EXPERTS ONLY)** в json в поле **native** добавить **topic**. Пример:
-```
+```json
 "native": {
   "topic": "/yandex/controls/light_BdR_002/state"
 }
