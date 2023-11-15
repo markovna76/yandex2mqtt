@@ -65,6 +65,8 @@ module.exports.query = [
             r.payload.devices.push(ldevice.getState());
         };
 
+        debug('query :: send: %O', r);
+
         res.status(200).send(r);
     }
 ];
@@ -80,7 +82,7 @@ module.exports.action = [
             }
         };
 
-        debug('action :: recv: %O', req.body)
+        debug('action :: recv: %O', req.body);
 
         for (const payloadDevice of req.body.payload.devices) {
             const {id} = payloadDevice;

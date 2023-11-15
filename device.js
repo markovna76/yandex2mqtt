@@ -40,7 +40,7 @@ function convertToYandexValue(val, actType) {
 /* Device class defenition */
 class Device {
     constructor(options) {
-        const id = global.devices.length;
+        const id = options.id;
         this.data = {
             id: options.id || String(id),
             name: options.name || 'Без названия',
