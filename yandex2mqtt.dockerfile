@@ -9,8 +9,11 @@ WORKDIR /opt/yandex2mqtt
 
 VOLUME /opt/yandex2mqtt/data
 
+ENV PATH_CONFIG="data/config"
+ENV PATH_DEVICES="data/config.devices"
+
 CMD node app.js \
     --log info \
     --db data/db.json \
-    --cfg data/config \
-    --devices data/config.devices \
+    --cfg ${PATH_CONFIG} \
+    --devices ${PATH_DEVICES} \
