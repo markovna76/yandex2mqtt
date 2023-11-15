@@ -2,9 +2,8 @@ yandex2mqtt.code-workspace
 .DS_Store
 node_modules/
 package-lock.json
-npm-debug.log
-yarn-error.log
 .env
-config.js.def
-config.js
-loki.json
+*.log
+data
+test
+

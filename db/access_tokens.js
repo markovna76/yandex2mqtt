@@ -1,9 +1,10 @@
 'use strict';
 
 const {logger} = global;
+const { cli } = global;
 const loki = require('lokijs');
 
-global.dbl = new loki('data/loki.json', {
+global.dbl = new loki(cli.db, {
     autoload: true,
     autosave: true,
     autosaveInterval: 5000,

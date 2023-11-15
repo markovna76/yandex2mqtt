@@ -1,6 +1,11 @@
 'use strict';
 
 const passport = require('passport');
+const util = require('util')
+let debug = require('debug')('route:user');
+
+// Allow to print full object
+util.inspect.defaultOptions.depth = null;
 
 module.exports.info = [
     passport.authenticate('bearer', {session: true}),
@@ -36,7 +41,7 @@ module.exports.devices = [
             for (const d of global.devices.filter(d => Array.isArray(d.meta.allowedUsers) && d.meta.allowedUsers.indexOf(userId) > -1)) {
                 r.payload.devices.push(d.getInfo());
             };
-            
+
             res.status(200).send(r);
         } catch (e) {
             global.logger.log('error', {message: `${e}`});
@@ -76,6 +81,8 @@ module.exports.action = [
             }
         };
 
+        debug('action :: recv: %O', req.body)
+
         for (const payloadDevice of req.body.payload.devices) {
             const {id} = payloadDevice;
 
@@ -85,7 +92,7 @@ module.exports.action = [
             for (const pdc of payloadDevice.capabilities) {
                 capabilities.push(ldevice.setCapabilityState(pdc.state.value , pdc.type, pdc.state.instance));
             }
-            
+
             r.payload.devices.push({id, capabilities});
         };
 
@@ -100,7 +107,7 @@ module.exports.unlink = [
         const r = {
             request_id: reqId,
         }
-        
+
         res.status(200).send(r);
     }
 ];

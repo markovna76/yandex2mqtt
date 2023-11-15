@@ -1,9 +1,80 @@
 'use strict';
 
+/* First - prepare CLI args and logger */
+const { parseArgs } = require('node:util');
+
+/* Extract arguments */
+const clArgv = process.argv.slice(2);
+
+const options = {
+    // --help option
+    help: {
+        type: 'boolean',
+        short: 'h',
+    },
+    // --log option
+    log: {
+        type: 'string',
+        default: 'debug',
+    },
+    // --cfg option
+    cfg: {
+        type: 'string',
+        default: 'data/config.js',
+    },
+    // --devices option
+    devices: {
+        type: 'string',
+        default: 'data/devices.js',
+    },
+    // --db option
+    db: {
+        type: 'string',
+        default: 'data/db.json',
+    },
+};
+
+/* Parse args */
+global.cli = parseArgs({ clArgv, options }).values;
+/* Copy to global scope */
+const {cli} = global;
+
+/* Help requested? */
+if (cli.help) {
+    console.log("Tool to listen Yandex Alice service and map devices to/from MQTT");
+    console.log("Command line options:");
+    console.log("--help    This help");
+    console.log("--log     Log level, possible values: debug, info, error");
+    console.log("--cfg     Path to common config file (without .js extension), default is data/config");
+    console.log("--devices Path to devce config file (without .js extension), default is data/devices");
+    console.log("--db      Path to application state database, default is data/db.json");
+    console.log("");
+    return 0;
+}
+
+/* Basic imports */
+const { createLogger, format, transports } = require('winston');
+
+/* Logging */
+global.logger = createLogger({
+    level: cli.log,
+    format: format.combine(
+        format.errors({ stack: true }),
+        format.timestamp(),
+        format.printf(({ level, message, timestamp, stack }) => {
+            return `${timestamp} ${level}: ${stack != undefined ? stack : message}`;
+        }),
+    ),
+    transports: [
+        new transports.Console({
+            silent: false,
+        })
+    ],
+});
+
 const fs = require('fs');
 const path = require('path');
-/* */
-const {createLogger, format, transports} = require('winston');
+
 /* express and https */
 const ejs = require('ejs');
 const express = require('express');
@@ -18,33 +89,12 @@ const session = require('express-session');
 const passport = require('passport');
 /* mqtt client for devices */
 const mqtt = require('mqtt');
-/* */
-const config = require('./config');
+
+/* load common config */
+const config = require(cli.cfg);
 config.notification = config.notification || [];
 
 const Device = require('./device');
-
-/* */
-const clArgv = process.argv.slice(2);
-
-/* Logging */
-global.logger = createLogger({
-    level: 'info',
-    format: format.combine(
-        format.errors({stack: true}),
-        format.timestamp(),
-        format.printf(({level, message, timestamp, stack}) => {
-            return `${timestamp} ${level}: ${stack != undefined ? stack : message}`;
-        }),
-    ),
-    transports: [
-        new transports.Console({
-            silent: clArgv.indexOf('--log-info') == -1
-        })
-    ],
-});
-
-if (clArgv.indexOf('--log-error') > -1) global.logger.add(new transports.File({filename: 'log/error.log', level: 'error'}));
 
 /* */
 app.engine('ejs', ejs.__express);
@@ -157,11 +207,11 @@ global.mqttClient = mqtt.connect(`mqtt://${config.mqtt.host}`, {
                     global.logger.log('info', {message: `${d}`});
                 });
             });
-                
+
             req.on('error', error => {
                 global.logger.log('error', {message: `${error}`});
             });
-            
+
             let {id, capabilities, properties} = ldevice.getState();
             req.write(JSON.stringify({
                 "ts": Math.floor(Date.now() / 1000),
