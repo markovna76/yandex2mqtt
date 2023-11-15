@@ -93,6 +93,7 @@ const mqtt = require('mqtt');
 /* load common config */
 const config = require(cli.cfg);
 config.notification = config.notification || [];
+const configDevices = require(cli.devices);
 
 const Device = require('./device');
 
@@ -154,8 +155,8 @@ httpsServer.listen(config.https.port);
 
 /* cache devices from config to global */
 global.devices = [];
-if (config.devices) {
-    config.devices.forEach(opts => {
+if (configDevices.devices) {
+    configDevices.devices.forEach(opts => {
         global.devices.push(new Device(opts));
     });
 }
