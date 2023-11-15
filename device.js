@@ -181,10 +181,12 @@ class Device {
     }
 
     /* Change device capability state and publish value to MQTT topic */
-    setCapabilityState(val, type, instance) {
+    setCapabilityState(val, relative, type, instance) {
         const {id} = this.data;
         const actType = String(type).split('.')[2];
         const value = this.getMappedValue(val, actType, true);
+
+        let relativePrefix = (relative && value > 0 && !isNaN(value)) ? '+' : ''
 
         let message;
         let topic;
@@ -194,7 +196,7 @@ class Device {
             capability.state.value = value;
             topic = this.findTopicByInstance(instance);
             if (topic == undefined) throw new Error(`Can't find set topic for '${type}' in device '${id}'`);
-            message = `${value}`;
+            message = `${relativePrefix}${value}`;
         } catch(e) {
             topic = false;
             logger.log('error', {message: `${e}`});
