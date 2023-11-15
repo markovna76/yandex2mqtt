@@ -1,4 +1,8 @@
 const {logger} = global;
+let debug = require('debug')('device');
+
+// Allow to print full object
+require('util').inspect.defaultOptions.depth = null;
 
 /* function for convert system values to Yandex (depends of capability or property type) */
 function convertToYandexValue(val, actType) {
@@ -222,12 +226,16 @@ class Device {
         const {id, capabilities, properties} = this.data;
 
         try {
-            const cp = [].concat(capabilities, properties).find(cp => (cp.state.instance === instance));
-            if (cp == undefined) throw new Error(`Can't instance '${instance}' in device '${id}'`);
+            const cps = [].concat(capabilities, properties).filter(cp => (cp.state.instance === instance));
+            if (cps == undefined) throw new Error(`Can't instance '${instance}' in device '${id}'`);
 
-            const actType = String(cp.type).split('.')[2];
-            const value = this.getMappedValue(val, actType, false);
-            cp.state = {instance, value: convertToYandexValue(value, actType)};
+            cps.forEach((cp) => {
+                debug('updateState: %O', cp)
+
+                const actType = String(cp.type).split('.')[2];
+                const value = this.getMappedValue(val, actType, false);
+                cp.state = { instance, value: convertToYandexValue(value, actType) };
+            });
         } catch(e) {
             logger.log('error', {message: `${e}`});
         }

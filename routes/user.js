@@ -1,11 +1,10 @@
 'use strict';
 
 const passport = require('passport');
-const util = require('util')
 let debug = require('debug')('route:user');
 
 // Allow to print full object
-util.inspect.defaultOptions.depth = null;
+require('util').inspect.defaultOptions.depth = null;
 
 module.exports.info = [
     passport.authenticate('bearer', {session: true}),

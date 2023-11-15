@@ -72,6 +72,11 @@ global.logger = createLogger({
     ],
 });
 
+let debug = require('debug')('app');
+
+// Allow to print full object
+require('util').inspect.defaultOptions.depth = null;
+
 const fs = require('fs');
 const path = require('path');
 
@@ -179,60 +184,65 @@ global.mqttClient = mqtt.connect(`mqtt://${config.mqtt.host}`, {
     password: config.mqtt.password
 }).on('connect', () => { /* on connect event handler */
     mqttClient.subscribe(subscriptions.map(pair => pair.topic));
+    logger.info("MQTT: connected");
 }).on('offline', () => { /* on offline event handler */
-    /* */
+    logger.info("MQTT: disconnected");
 }).on('message', (topic, message) => { /* on get message event handler */
-    const subscription = subscriptions.find(sub => topic.toLowerCase() === sub.topic.toLowerCase());
-    if (subscription == undefined) return;
+    const subscriptionTriggered = subscriptions.filter(sub => topic.toLowerCase() === sub.topic.toLowerCase());
+    if (subscriptionTriggered == undefined) return;
 
-    const {deviceId, instance} = subscription;
-    const ldevice = global.devices.find(d => d.data.id == deviceId);
-    ldevice.updateState(`${message}`, instance);
+    subscriptionTriggered.forEach((subscription) => {
+        debug("Subscription: %o", subscription);
 
-    /* Make Request to Yandex Dialog notification API */
-    Promise.all(config.notification.map(el => {
-        let {skill_id, oauth_token, user_id} = el;
+        const { deviceId, instance } = subscription;
+        const ldevice = global.devices.find(d => d.data.id == deviceId);
+        ldevice.updateState(`${message}`, instance);
 
-        return new Promise((resolve, reject) => {
-            let req = https.request({
-                hostname: 'dialogs.yandex.net',
-                port: 443,
-                path: `/api/v1/skills/${skill_id}/callback/state`,
-                method: 'POST',
-                headers: {
-                    'Content-Type': `application/json`,
-                    'Authorization': `OAuth ${oauth_token}`
-                }
-            }, res => {
-                res.on('data', d => {
-                    global.logger.log('info', {message: `${d}`});
+        /* Make Request to Yandex Dialog notification API */
+        Promise.all(config.notification.map(el => {
+            let { skill_id, oauth_token, user_id } = el;
+
+            return new Promise((resolve, reject) => {
+                let req = https.request({
+                    hostname: 'dialogs.yandex.net',
+                    port: 443,
+                    path: `/api/v1/skills/${skill_id}/callback/state`,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': `application/json`,
+                        'Authorization': `OAuth ${oauth_token}`
+                    }
+                }, res => {
+                    res.on('data', d => {
+                        global.logger.log('info', { message: `${d}` });
+                    });
                 });
+
+                req.on('error', error => {
+                    global.logger.log('error', { message: `${error}` });
+                });
+
+                let { id, capabilities, properties } = ldevice.getState();
+                let resp = {
+                    "ts": Math.floor(Date.now() / 1000),
+                    "payload": {
+                        "user_id": `${user_id}`,
+                        "devices": [{
+                            id,
+                            capabilities: capabilities.filter(c => c.state.instance == instance),
+                            properties: properties.filter(p => p.state.instance == instance)
+                        }],
+                    }
+                };
+                debug("Message :: resp : %O", resp);
+                req.write(JSON.stringify(resp));
+
+                req.end();
+
+                resolve(true);
             });
-
-            req.on('error', error => {
-                global.logger.log('error', {message: `${error}`});
-            });
-
-            let {id, capabilities, properties} = ldevice.getState();
-            req.write(JSON.stringify({
-                "ts": Math.floor(Date.now() / 1000),
-                "payload": {
-                    "user_id": `${user_id}`,
-                    "devices": [{
-                        id,
-                        capabilities: capabilities.filter(c => c.state.instance == instance),
-                        properties: properties.filter(p => p.state.instance == instance)
-                    }],
-                }
-            }));
-
-            req.end();
-
-            resolve(true);
-        });
-    }));
-
-    /* */
+        }));
+    })
 });
 
 module.exports = app;

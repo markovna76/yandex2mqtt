@@ -12,7 +12,11 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/app.js",
-            "args": ["--log", "debug", "--cfg", "./test/yandex2mqtt"],
+            "args": ["--log", "debug",
+                "--cfg",
+                "./test/config",
+                "--devices",
+                "./test/devices"],
         }
     ]
 }
