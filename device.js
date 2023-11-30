@@ -21,7 +21,7 @@ function convertToYandexValue(val, actType) {
         case 'toggle':
         case 'on_off': {
             if (val == undefined) return false;
-            if (['true', 'on', '1'].indexOf(String(val).toLowerCase()) != -1) return true;
+            if (['open', 'true', 'on', '1'].indexOf(String(val).toLowerCase()) != -1) return true;
             else return false;
         }
         // Auto detect number and convert it
@@ -202,7 +202,7 @@ class Device {
         try {
             const capability = this.findCapability(type, instance);
             if (capability == undefined) throw new Error(`Can't find capability '${type}' in device '${id}'`);
-            capability.state.value = value;
+            capability.state.value = val;
             topic = this.findTopicByInstance(instance);
             if (topic == undefined) throw new Error(`Can't find set topic for '${type}' in device '${id}'`);
             message = `${relativePrefix}${value}`;
