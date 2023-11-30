@@ -174,9 +174,17 @@ httpsServer.listen(config.https.port);
 
 /* cache devices from config to global */
 global.devices = [];
+// Check device IDs uniq
+let deviceIds = [];
 if (configDevices.devices) {
     configDevices.devices.forEach(opts => {
-        global.devices.push(new Device(opts));
+        let dev = new Device(opts);
+        let devID = dev.getInfo().id
+        if (deviceIds.indexOf(devID) > -1) {
+            throw new Error('Duplicating device ID: ' + devID);
+        }
+        global.devices.push(dev);
+        deviceIds.push(devID);
     });
 }
 
