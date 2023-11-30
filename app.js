@@ -32,6 +32,10 @@ const options = {
         type: 'string',
         default: 'data/db.json',
     },
+    // --dump option
+    dump: {
+        type: 'boolean',
+    },
 };
 
 /* Parse args */
@@ -48,6 +52,7 @@ if (cli.help) {
     console.log("--cfg     Path to common config file (without .js extension), default is data/config");
     console.log("--devices Path to devce config file (without .js extension), default is data/devices");
     console.log("--db      Path to application state database, default is data/db.json");
+    console.log("--dump    Display result configration and exit");
     console.log("");
     return 0;
 }
@@ -77,6 +82,20 @@ let debug = require('debug')('app');
 // Allow to print full object
 require('util').inspect.defaultOptions.depth = null;
 
+/* load common config */
+const config = require(cli.cfg);
+config.notification = config.notification || [];
+const configDevices = require(cli.devices);
+
+if (cli.dump) {
+    const util = require('util');
+    logger.info("Config:");
+    logger.info(util.inspect(config, false, null, true));
+    logger.info("Devices:");
+    logger.info(util.inspect(configDevices, false, null, true));
+    return 0
+}
+
 const fs = require('fs');
 const path = require('path');
 
@@ -94,11 +113,6 @@ const session = require('express-session');
 const passport = require('passport');
 /* mqtt client for devices */
 const mqtt = require('mqtt');
-
-/* load common config */
-const config = require(cli.cfg);
-config.notification = config.notification || [];
-const configDevices = require(cli.devices);
 
 const Device = require('./device');
 
