@@ -145,6 +145,11 @@ class Device {
         const map = this.data.custom_data.valueMapping.find(m => m.type == actType);
         if (map == undefined) return val;
 
+        // Percent invert
+        if (map.mapping == 'invert_percent') {
+            return 100 - parseInt(val)
+        }
+
         var from, to;
         if (y2m == true) [from, to] = map.mapping;
         else [to, from] = map.mapping;
