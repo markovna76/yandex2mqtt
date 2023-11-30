@@ -43,6 +43,7 @@ node app.js --log debug --cfg ./test/config --devices ./test/devices
 
 ## Документация
 
+* [Настройка](doc/config.md)
 * [Docker](doc/docker.md)
 * [Локальная установка и запуск](doc/setup.md)
 

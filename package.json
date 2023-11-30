@@ -1,12 +1,16 @@
 {
   "name": "yandex2mqtt",
-  "version": "0.2.0",
-  "repository": "https://github.com/munrexio/yandex2mqtt.git",
+  "version": "0.3.0",
+  "repository": "https://github.com/petrows/yandex2mqtt",
   "license": "MIT",
   "contributors": [
     {
       "name": "Munrexio",
       "url": "https://github.com/munrexio"
+    },
+    {
+      "name": "Evgenii Abramov",
+      "url": "https://github.com/lasthead0"
     }
   ],
   "scripts": {
