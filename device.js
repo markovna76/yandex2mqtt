@@ -215,6 +215,8 @@ class Device {
             global.mqttClient.publish(topic, message);
         }
 
+        logger.info(`Command ${id}: instance ${instance}, topic ${topic}, command ${val}, message ${message}`)
+
         return {
             type,
             'state': {
@@ -239,7 +241,10 @@ class Device {
 
                 const actType = String(cp.type).split('.')[2];
                 const value = this.getMappedValue(val, actType, false);
+
                 cp.state = { instance, value: convertToYandexValue(value, actType) };
+
+                logger.info(`Update ${id}: instance ${instance}, command ${val}, value ${value}`)
             });
         } catch(e) {
             logger.log('error', {message: `${e}`});

@@ -236,12 +236,12 @@ global.mqttClient = mqtt.connect(`mqtt://${config.mqtt.host}`, {
                     }
                 }, res => {
                     res.on('data', d => {
-                        global.logger.log('info', { message: `${d}` });
+                        global.logger.debug(d);
                     });
                 });
 
                 req.on('error', error => {
-                    global.logger.log('error', { message: `${error}` });
+                    global.logger.error(error);
                 });
 
                 let { id, capabilities, properties } = ldevice.getState();
