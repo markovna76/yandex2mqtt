@@ -241,10 +241,11 @@ class Device {
 
                 const actType = String(cp.type).split('.')[2];
                 const value = this.getMappedValue(val, actType, false);
+                const value_yandex = convertToYandexValue(value, actType);
 
-                cp.state = { instance, value: convertToYandexValue(value, actType) };
+                cp.state = { instance, value: value_yandex };
 
-                logger.info(`Update ${id}: instance ${instance}, command ${val}, value ${value}`)
+                logger.info(`Update ${id}: instance ${instance}, command ${val}, value ${value_yandex}`)
             });
         } catch(e) {
             logger.log('error', {message: `${e}`});
