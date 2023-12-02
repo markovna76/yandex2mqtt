@@ -150,6 +150,11 @@ class Device {
             return 100 - parseInt(val)
         }
 
+        // Custom function?
+        if (map.mapping instanceof Function) {
+            return map.mapping(this, val, y2m)
+        }
+
         var from, to;
         if (y2m == true) [from, to] = map.mapping;
         else [to, from] = map.mapping;
