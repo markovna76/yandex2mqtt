@@ -139,9 +139,10 @@ class Device {
      *
      * @param {*} val value
      * @param {*} actType capability type
+     * @param {*} instance capability instance
      * @param {*} y2m mapping direction (yandex to mqtt, mqtt to yandex)
      */
-    getMappedValue(val, actType, y2m) {
+    getMappedValue(val, actType, instance, y2m) {
         const map = this.data.custom_data.valueMapping.find(m => m.type == actType);
         if (map == undefined) return val;
 
@@ -152,7 +153,7 @@ class Device {
 
         // Custom function?
         if (map.mapping instanceof Function) {
-            return map.mapping(this, val, y2m)
+            return map.mapping(this, instance, val, y2m)
         }
 
         var from, to;
@@ -198,7 +199,7 @@ class Device {
     setCapabilityState(val, relative, type, instance) {
         const {id} = this.data;
         const actType = String(type).split('.')[2];
-        const value = this.getMappedValue(val, actType, true);
+        const value = this.getMappedValue(val, actType, instance, true);
 
         let relativePrefix = (relative && value > 0 && !isNaN(value)) ? '+' : ''
 
@@ -245,7 +246,7 @@ class Device {
                 debug('updateState: %O', cp)
 
                 const actType = String(cp.type).split('.')[2];
-                const value = this.getMappedValue(val, actType, false);
+                const value = this.getMappedValue(val, actType, instance, false);
                 const value_yandex = convertToYandexValue(value, actType);
 
                 cp.state = { instance, value: value_yandex };
