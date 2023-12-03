@@ -54,13 +54,13 @@ module.exports = {
             valueMapping: [
                 {
                     type: 'on_off',
-                    mapping: function(device, value, y2m) {
+                    mapping: function (device, instance, value, y2m) {
                         // Кастомная функция конвертации
                         // device: объект устройства (если нужны какие-то свойства)
                         // value: значение
                         // y2m: направление конвертации, true = Яндекс -> MQTT
                         // Сообщим в лог
-                        logger.debug(`Callback: ${device}, ${value}, ${y2m}`)
+                        logger.debug(`Callback: ${device}, ${instance}, ${value}, ${y2m}`)
                         // Направление:
                         if (y2m) { // От Яндекс в MQTT
                             // Если приходит команда "ВКЛЮЧИ" (true) -> 25°C
