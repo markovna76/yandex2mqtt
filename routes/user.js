@@ -90,6 +90,11 @@ module.exports.action = [
             const capabilities = [];
             const ldevice = global.devices.find(device => device.data.id == id);
 
+            if (!ldevice) {
+                logger.error(`Device ${id} not found (rescan device list?)`);
+                continue;
+            }
+
             for (const pdc of payloadDevice.capabilities) {
                 capabilities.push(ldevice.setCapabilityState(
                     pdc.state.value,
