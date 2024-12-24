@@ -2,7 +2,7 @@
 
 const {logger} = global;
 const { cli } = global;
-const { users } = require('../' + cli.cfg);
+const { users } = require(`../${cli.path}/${cli.cfg}`);
 
 module.exports.findById = (id, done) => {
     for (const user of users) {

@@ -1,0 +1,22 @@
+services:
+  alisa:
+    container_name: alisa
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile
+    entrypoint: ""
+    ports:
+      - 0.0.0.0:443:4433
+      - 0.0.0.0:80:8080
+    environment:
+      - DEBUG=*
+    command:
+      - sleep
+      - "600"
+#      - node
+#      - app.js
+    volumes:
+      - ./data:/alisa/data
+      # Для локальной разработки можно раскомментарить строку ниже
+      # - ./:/alisa
+

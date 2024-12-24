@@ -142,8 +142,17 @@ class Device {
      * @param {*} instance capability instance
      * @param {*} y2m mapping direction (yandex to mqtt, mqtt to yandex)
      */
-    getMappedValue(val, actType, instance, y2m) {
-        const map = this.data.custom_data.valueMapping.find(m => m.type == actType);
+     getMappedValue(val, actType, instance, y2m) {
+        let map;
+            if (instance != undefined) {
+            map = this.data.custom_data.valueMapping.find(m => m.type == actType && m.instance == instance);
+        }
+
+        if (map == undefined) {
+            map = this.data.custom_data.valueMapping.find(m => m.type == actType);
+        }
+//        const map = this.data.custom_data.valueMapping.find(m => m.type == actType);
+
         if (map == undefined) return val;
 
         // Percent invert
@@ -204,14 +213,42 @@ class Device {
         let relativePrefix = (relative && value > 0 && !isNaN(value)) ? '+' : ''
 
         let message;
-        let topic;
+        let topic, topicRaw;  //evs
         try {
             const capability = this.findCapability(type, instance);
             if (capability == undefined) throw new Error(`Can't find capability '${type}' in device '${id}'`);
-            capability.state.value = val;
-            topic = this.findTopicByInstance(instance);
-            if (topic == undefined) throw new Error(`Can't find set topic for '${type}' in device '${id}'`);
-            message = `${relativePrefix}${value}`;
+            //evs --
+            //- topic = this.findTopicByInstance(instance);
+            //- if (topic == undefined) throw new Error(`Can't find set topic for '${type}' in device '${id}'`);
+	        //evs ++ //different topics for different values
+            topicRaw = this.findTopicByInstance(instance);
+                if (topicRaw == undefined) throw new Error(`Can't find set topic for '${type}' in device '${id}'`);
+            logger.info(`topicRaw ${JSON.stringify(topicRaw)}`);  //evs
+
+            if (typeof topicRaw  == 'string') {
+                topic=topicRaw;
+            } else if (typeof topicRaw  == 'object') {
+                topic = topicRaw[val];
+                if (topic == undefined) throw new Error(`Can't find set topic for value '${val}' for '${type}' in device '${id}'`);
+            } else throw new Error(`Can't find set topic (unexpected type) for '${type}' in device '${id}'`);
+            //evs++
+            // message = `${relativePrefix}${value}`;
+            if ( typeof( val == 'nubber') && relative ){
+                    capability.state.value = capability.state.value + value;
+                        if (capability.parameters.range.max !== undefined && capability.parameters.range.max < capability.state.value) {
+                            capability.state.value = capability.parameters.range.max
+                        }
+                        if (capability.parameters.range.min !== undefined && capability.parameters.range.min > capability.state.value) {
+                            capability.state.value = capability.parameters.range.min
+                        }
+            } else {
+                    capability.state.value = value;
+            }
+
+            if (typeof(capability.state.value) == 'number'){
+                message = `${capability.state.value}`;
+            }
+
         } catch(e) {
             topic = false;
             logger.log('error', {message: `${e}`});
@@ -221,7 +258,7 @@ class Device {
             global.mqttClient.publish(topic, message);
         }
 
-        logger.info(`Command ${id}: instance ${instance}, topic ${topic}, command ${val}, message ${message}`)
+        logger.info(`Command ${id}: instance=[${instance}] topic=[${topic}] command=[${val}] message=[${message}]`)
 
         return {
             type,

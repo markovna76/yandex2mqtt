@@ -1,0 +1,12 @@
+.editorconfig
+.eslintrc
+.git
+.gitignore
+.dockerignore
+.vscode
+data
+doc
+docker
+docker-compose-yml
+examples
+node_modules

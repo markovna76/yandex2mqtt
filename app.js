@@ -17,20 +17,25 @@ const options = {
         type: 'string',
         default: 'debug',
     },
+    // --path option
+    path: {
+        type: 'string',
+        default: './configs/',
+    },
     // --cfg option
     cfg: {
         type: 'string',
-        default: 'data/config.js',
+        default: 'main.js',
     },
     // --devices option
     devices: {
         type: 'string',
-        default: 'data/devices.js',
+        default: 'dev_*.js',
     },
     // --db option
     db: {
         type: 'string',
-        default: 'data/db.json',
+        default: './data/db.json',
     },
     // --dump option
     dump: {
@@ -38,6 +43,7 @@ const options = {
     },
 };
 
+//console.log(options);
 /* Parse args */
 global.cli = parseArgs({ clArgv, options }).values;
 /* Copy to global scope */
@@ -45,13 +51,14 @@ const {cli} = global;
 
 /* Help requested? */
 if (cli.help) {
-    console.log("Tool to listen Yandex Alice service and map devices to/from MQTT");
+    console.log("\nTool to listen Yandex Alice service and map devices to/from MQTT\n");
     console.log("Command line options:");
     console.log("--help    This help");
     console.log("--log     Log level, possible values: debug, info, error");
-    console.log("--cfg     Path to common config file (without .js extension), default is data/config");
-    console.log("--devices Path to devce config file (without .js extension), default is data/devices");
-    console.log("--db      Path to application state database, default is data/db.json");
+    console.log("--path    Path to the all config files, default is './configs/'")
+    console.log("--cfg     Name of the common config file, default is 'main.js'");
+    console.log("--devices Name of the devices config file, default is 'dev_*.js'");
+    console.log("--db      Path to application state database, default is ./data/db.json");
     console.log("--dump    Display result configration and exit");
     console.log("");
     return 0;
@@ -82,10 +89,40 @@ let debug = require('debug')('app');
 // Allow to print full object
 require('util').inspect.defaultOptions.depth = null;
 
+const fs = require('fs');
+const path = require('path');
 /* load common config */
-const config = require(cli.cfg);
+var config = require(`${cli.path}` + '/' + `${cli.cfg}`);
+
+// Convert mask to Regexp
+let FileMask = cli.devices.replaceAll(".","\\.");
+FileMask = FileMask.replaceAll("*",".*");
+FileMask = `^${FileMask}$`;
+
+var devices = [];
+fs.readdirSync(cli.path).forEach(function(filename) {
+    if (filename.match(FileMask)){
+        devices.push (require(`${cli.path}/${filename}`));
+    }
+});
+
+// Собирем notification
+if (config.env.oauth_token != undefined){
+    var notif = [];
+    devices.forEach(function(device){
+        var noteCur = [];
+        noteCur.oauth_token = config.env.oauth_token;
+        noteCur.user_id = config.env.user_id;
+        noteCur.skill_id = device.id;
+        notif.push (noteCur);
+//        console.log(device.id);
+    });
+    config.notification = notif;
+//    console.log(notif);
+}
+
 config.notification = config.notification || [];
-const configDevices = require(cli.devices);
+const configDevices = {devices};
 
 if (cli.dump) {
     const util = require('util');
@@ -95,9 +132,6 @@ if (cli.dump) {
     logger.info(util.inspect(configDevices, false, null, true));
     return 0
 }
-
-const fs = require('fs');
-const path = require('path');
 
 /* express and https */
 const ejs = require('ejs');
@@ -162,15 +196,19 @@ app.post('/provider/v1.0/user/devices/query', r_user.query);
 app.post('/provider/v1.0/user/devices/action', r_user.action);
 app.post('/provider/v1.0/user/unlink', r_user.unlink);
 
-/* create https server */
-const privateKey = fs.readFileSync(config.https.privateKey, 'utf8');
-const certificate = fs.readFileSync(config.https.certificate, 'utf8');
-const credentials = {
-    key: privateKey,
-    cert: certificate,
-};
-const httpsServer = https.createServer(credentials, app);
-httpsServer.listen(config.https.port);
+/* create http(s) server */
+if (config.http.ssl) {
+    const privateKey = fs.readFileSync(config.http.privateKey, 'utf8');
+    const certificate = fs.readFileSync(config.http.certificate, 'utf8');
+    const credentials = {
+        key: privateKey,
+        cert: certificate,
+    };
+    const httpsServer = https.createServer(credentials, app);
+    httpsServer.listen(config.http.port);
+} else {
+    app.listen(config.http.port);
+}
 
 /* cache devices from config to global */
 global.devices = [];
