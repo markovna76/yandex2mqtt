@@ -1,4 +1,4 @@
-module.exports = 
+module.exports =
   {
     env: {
      // oauth_token - Токен с Яндекса https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/resources-alerts#oauth
@@ -10,8 +10,8 @@ module.exports =
     mqtt: {
       "host": "192.168.1.11",
       "port": 8883,
-      "user": "grafana",
-      "password": "grafana"
+      "user": "mqttLogin",
+      "password": "mqttPassword"
     },
 
     http: {

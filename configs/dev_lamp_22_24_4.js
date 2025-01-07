@@ -1,6 +1,6 @@
 module.exports =
 {
-  id: 'lamp_22_24_4',
+  id: 'lamp_22_24_1',
   name: 'Ёлка',
   room: 'Кухня',
   type: 'devices.types.light',
