@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: configs
+data:
+{{- range $path, $_ :=  .Files.Glob  "configs/**.js" }}
+  {{ $path | trimPrefix "configs/" }}: |-
+  {{ $.Files.Get $path | indent 4 }}
+{{ end }}
